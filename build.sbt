@@ -46,6 +46,11 @@ lazy val rubyGenerator = project
   .dependsOn(lib, lib % "test->test")
   .settings(commonSettings: _*)
 
+lazy val swiftGenerator = project
+  .in(file("swift-generator"))
+  .dependsOn(lib, lib % "test->test")
+  .settings(commonSettings: _*)
+
 lazy val commonSettings: Seq[Setting[_]] = Seq(
   name <<= name("apidoc-" + _),
   organization := "com.bryzek.apidoc",
