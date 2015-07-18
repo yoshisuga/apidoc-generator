@@ -1,8 +1,8 @@
 package controllers
 
 import com.bryzek.apidoc.generator.v0.models.json._
-import com.bryzek.apidoc.generator.v0.models.{Invocation, InvocationForm, Generator}
-import lib.{ServiceFileNames, Validation}
+import com.bryzek.apidoc.generator.v0.models.{Invocation, InvocationForm}
+import lib.Validation
 import play.api.libs.json._
 import play.api.mvc._
 
@@ -17,24 +17,10 @@ object Invocations extends Controller {
             val form = s.get
             generator.invoke(form) match {
               case Left(errors) => Conflict(Json.toJson(Validation.errors(errors)))
-              case Right(code) => {
-                Ok(
-                  Json.toJson(
-                    Invocation(
-                      source = code, // backwards compatible
-                      files = Seq(
-                        ServiceFileNames.toFile(
-                          form.service.namespace,
-                          form.service.organization.key,
-                          form.service.application.key,
-                          code,
-                          target.metaData.language
-                        )
-                      )
-                    )
-                  )
-                )
-              }
+              case Right(sourceFiles) =>
+                // Also send back single source for backwards compatibility
+                val singleSource = sourceFiles.map(_.contents).mkString("\n\n").trim
+                Ok(Json.toJson(Invocation(singleSource, sourceFiles)))
             }
           }
         }

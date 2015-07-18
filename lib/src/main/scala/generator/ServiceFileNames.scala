@@ -1,6 +1,7 @@
-package lib
+package generator
 
 import com.bryzek.apidoc.generator.v0.models.File
+import lib.{Text, VersionTag}
 
 object ServiceFileNames {
 
@@ -8,20 +9,23 @@ object ServiceFileNames {
     namespace: String,
     organizationKey: String,
     applicationKey: String,
+    version: String,
+    suffix: String,
     contents: String,
     languages: Option[String] = None
   ): File = {
     val language = languages.map { toLanguages(_) }.getOrElse(Nil).headOption.getOrElse(Language.Default)
 
     val baseName = Seq(
-      organizationKey,
-      applicationKey,
-      s"client"
-    ).mkString("_")
+      Some(organizationKey),
+      Some(applicationKey),
+      VersionTag(version).major.map { v => s"V$v" },
+      Some(suffix)
+    ).flatten.mkString("_")
 
     val name = language.isCamelCased match {
       case true => Text.underscoreAndDashToInitCap(baseName)
-      case false => baseName
+      case false => Text.splitIntoWords(baseName).map(_.toLowerCase).mkString("_")
     }
 
     File(
@@ -31,13 +35,13 @@ object ServiceFileNames {
     )
   }
 
-  private[lib] sealed trait Language {
+  private[generator] sealed trait Language {
     def isCamelCased: Boolean
     def name: String
     def extension: String
   }
 
-  private[lib] object Language {
+  private[generator] object Language {
 
     val All = Seq(
       new Language {
@@ -93,7 +97,7 @@ object ServiceFileNames {
 
   }
 
-  private[lib] def toLanguages(languages: String): Seq[Language] = {
+  private[generator] def toLanguages(languages: String): Seq[Language] = {
     languages.split(",").map(_.trim).flatMap(Language(_))
   }
 
