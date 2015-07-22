@@ -62,7 +62,45 @@ object SwiftValueTypes {
     }
   }
 
+  case object DateTimeIso8601 extends SwiftDataType {
+    override val apidocType = "date-time-iso-8601"
+    override val name = "NSDate"
 
+    override def valueFromString(value: String): String = {
+      val dateTimeString = JsString(value).as[String]
+      val x = Seq(
+        "{ () -> NSDate! in"
+      "let df = NSDateFormatter".indent(2),
+      "df.dateFormat = \"yyyy-M-d H:m:ssZZZ\"".indent(2),
+      s"return df.dateFromString(\"${dateTimeString}\")".indent(2),
+      "}()"
+      )
+      x.mkString("\n")
+    }
+  }
 
+  case object Decimal extends SwiftDataType {
+    override val apidocType = "decimal"
+    override val name = "NSDecimalNumber"
 
+    override def valueFromString(value: String): String = {
+      "NSDecimalNumber(string:\"${value}\")"
+    }
+  }
+
+  case object Object extends SwiftDataType {
+    override val apidocType = "object"
+    override val name = "[String : String]"
+  }
+
+  case object String extends SwiftDataType {
+    override val apidocType = "string"
+    override val name = "String"
+    override def valueFromString(value: String) = s""""${JsString(value).as[String]}""""
+  }
+
+  case object Uuid extends SwiftDataType {
+    override val apidocType = "uuid"
+    override val name = ""
+  }
 }
